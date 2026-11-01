@@ -31,7 +31,17 @@ pip install "graftql==2.0.5.dev123456"
 
 ## Stable packages
 
-Every pull request merged into `main` increments the patch component of the latest stable tag,
-builds and tests that version, creates an annotated tag, and publishes the package through the
-existing `pypi` environment. The release workflow is serialized so concurrent merges cannot
-allocate the same tag. Direct pushes to `main` do not create releases.
+Every pull request merged into `main` is analyzed by Python Semantic Release, then built, tagged,
+published through the existing `pypi` environment, and recorded as a GitHub Release. Pull request
+titles must follow Conventional Commits because squash merging uses the title as the released
+commit message:
+
+- `fix:` and `perf:` create a patch release.
+- `feat:` creates a minor release.
+- A type followed by `!` or a `BREAKING CHANGE:` footer creates a major release.
+- `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, and `test:` create a patch release so
+  that every merged pull request produces a release.
+
+Prefer squash merging and require the `conventional-title` CI job in the `main` branch protection
+rules. The release workflow is serialized so concurrent merges cannot allocate the same tag.
+Direct pushes to `main` do not create releases.

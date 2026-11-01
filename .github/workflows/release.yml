@@ -28,19 +28,16 @@ jobs:
           python-version: "3.12"
       - name: Calculate next release version
         id: version
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         shell: bash
         run: |
           existing_tag="$(git tag --points-at HEAD --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
           if [[ -n "${existing_tag}" ]]; then
             version="${existing_tag#v}"
           else
-            latest_tag="$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
-            current="${latest_tag#v}"
-            if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-              echo "Latest stable tag is not a vMAJOR.MINOR.PATCH tag: ${latest_tag}" >&2
-              exit 1
-            fi
-            version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+            git checkout -B main "${SOURCE_SHA}"
+            version="$(uv run --frozen --group release semantic-release version --print)"
           fi
           if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Release version is invalid: ${version}" >&2
@@ -69,6 +66,7 @@ jobs:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
       - name: Create release tag
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ needs.build.outputs.tag }}
           SOURCE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
         shell: bash
@@ -83,6 +81,9 @@ jobs:
           else
             git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}" "${SOURCE_SHA}"
             git push origin "refs/tags/${RELEASE_TAG}"
+          fi
+          if ! gh release view "${RELEASE_TAG}" >/dev/null 2>&1; then
+            gh release create "${RELEASE_TAG}" --verify-tag --generate-notes --title "${RELEASE_TAG}"
           fi
 
   publish:
