@@ -9,7 +9,6 @@ import strawberry.utils
 import strawberry.utils.typing
 from fastapi import Request, Response
 from graphql.error import GraphQLError
-from graphql.error.graphql_error import format_error as format_graphql_error
 from sqlalchemy.engine.base import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine
 from strawberry.fastapi import GraphQLRouter
@@ -253,15 +252,13 @@ class GraftRouter(GraphQLRouter):
         errors = []
         if "errors" in request.scope:
             errors.append(
-                format_graphql_error(
-                    GraphQLError(
-                        "User don't have necessary permissions for this path",
-                        path=[c.__tablename__ for c in request.scope["errors"]],
-                    )
-                )
+                GraphQLError(
+                    "User don't have necessary permissions for this path",
+                    path=[c.__tablename__ for c in request.scope["errors"]],
+                ).formatted
             )
         if result.errors:
-            errors.extend([format_graphql_error(err) for err in result.errors])
+            errors.extend([err.formatted for err in result.errors])
         if len(errors) > 0:
             data["errors"] = errors
         return data
