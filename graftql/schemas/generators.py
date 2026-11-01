@@ -149,7 +149,7 @@ def set_schema(
         strawberry_schema = strawberry.experimental.pydantic.type(
             cls, all_fields=True, name=cls.__name__, directives=directives
         )(Schema)
-        if extra_schema.__annotations__:
+        if strawberry.types.get_object_definition(extra_schema).fields:
             strawberry_schema = merge_types(cls.__name__, (strawberry_schema, extra_schema))
         if hasattr(cls, "resolve_reference"):
             strawberry_schema.resolve_reference = cls.resolve_reference
