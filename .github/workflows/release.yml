@@ -1,45 +1,103 @@
 name: Release
 
 on:
-  push:
-    tags: ["v*"]
+  pull_request:
+    types: [closed]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 permissions:
   contents: read
 
 jobs:
   build:
+    if: github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
         with:
           python-version: "3.12"
-      - name: Check tag matches package version
+      - name: Calculate next release version
+        id: version
+        shell: bash
         run: |
-          version=$(uv version --short)
-          if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
-            echo "Tag ${GITHUB_REF_NAME} does not match pyproject version ${version}" >&2
+          existing_tag="$(git tag --points-at HEAD --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+          if [[ -n "${existing_tag}" ]]; then
+            version="${existing_tag#v}"
+          else
+            latest_tag="$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+            current="${latest_tag#v}"
+            if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              echo "Latest stable tag is not a vMAJOR.MINOR.PATCH tag: ${latest_tag}" >&2
+              exit 1
+            fi
+            version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1))"
+          fi
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release version is invalid: ${version}" >&2
             exit 1
           fi
+          echo "tag=v${version}" >> "${GITHUB_OUTPUT}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          uv version "${version}" --no-sync
       - run: uv run --group dev pytest
       - run: uv build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: dist
+          name: release-dist
           path: dist/
+          if-no-files-found: error
+
+  tag:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+      - name: Create release tag
+        env:
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          SOURCE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        shell: bash
+        run: |
+          git config user.name "Pavel Mulin"
+          git config user.email "mulin.pasha@gmail.com"
+          if git rev-parse "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            if [[ "$(git rev-list -n 1 "${RELEASE_TAG}")" != "${SOURCE_SHA}" ]]; then
+              echo "${RELEASE_TAG} already points to a different commit" >&2
+              exit 1
+            fi
+          else
+            git tag -a "${RELEASE_TAG}" -m "Release ${RELEASE_TAG}" "${SOURCE_SHA}"
+            git push origin "refs/tags/${RELEASE_TAG}"
+          fi
 
   publish:
-    needs: build
+    needs: [build, tag]
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/graftql/
+      url: https://pypi.org/project/graftql/${{ needs.build.outputs.version }}/
     permissions:
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          name: dist
+          name: release-dist
           path: dist/
-      - uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
+        with:
+          skip-existing: true
