@@ -52,6 +52,17 @@ engines can be registered under different names for multi-tenant or federated se
 pip install graftql
 ```
 
+### AI agent setup
+
+Install the repository's [GraftQL skill](skills/graftql/SKILL.md) to give compatible coding agents
+the recommended model, router, relationship, security, and testing workflow:
+
+```bash
+npx skills add lorrod/graftql --skill graftql
+```
+
+Then ask your agent: `Use $graftql to add a typed GraphQL API to this FastAPI and SQLModel project.`
+
 Pull requests from branches in this repository publish development releases for testing. These
 releases use versions such as `2.0.5.dev123456`, so pip ignores them during normal installation.
 Install a specific preview using the version shown in the pull request workflow summary:

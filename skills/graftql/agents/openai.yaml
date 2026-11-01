@@ -1,0 +1,4 @@
+interface:
+  display_name: "GraftQL"
+  short_description: "Build typed GraphQL APIs from SQLModel models"
+  default_prompt: "Use $graftql to add a typed GraphQL API to this FastAPI and SQLModel project."
