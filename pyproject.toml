@@ -22,7 +22,7 @@ classifiers = [
 ]
 dependencies = [
   "sqlmodel==0.0.37",
-  "strawberry-graphql[debug-server]==0.307.1",
+  "strawberry-graphql[debug-server]==0.338.0",
   "fastapi==0.162.0",
 ]
 
