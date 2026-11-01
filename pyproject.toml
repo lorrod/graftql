@@ -106,6 +106,24 @@ dev = [
     "aiosqlite>=0.20.0",
     "greenlet>=3.0.3",
 ]
+release = [
+    "python-semantic-release==10.7.0",
+]
+
+[tool.semantic_release]
+commit_parser = "conventional"
+tag_format = "v{version}"
+version_toml = ["pyproject.toml:project.version"]
+
+[tool.semantic_release.branches.main]
+match = "main"
+prerelease = false
+
+[tool.semantic_release.commit_parser_options]
+minor_tags = ["feat"]
+patch_tags = ["fix", "perf", "build", "chore", "ci", "docs", "style", "refactor", "test"]
+parse_squash_commits = true
+ignore_merge_commits = true
 
 [tool.ruff]
 target-version = "py312"

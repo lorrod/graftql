@@ -1,0 +1,55 @@
+name: Preview package
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7
+        with:
+          python-version: "3.12"
+      - name: Verify semantic release calculation
+        shell: bash
+        run: |
+          git checkout -B main HEAD
+          version="$(uv run --frozen --group release semantic-release version --print)"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Python Semantic Release returned an invalid stable version: ${version}" >&2
+            exit 1
+          fi
+          echo "Next stable version: ${version}" >> "${GITHUB_STEP_SUMMARY}"
+      - name: Set preview version
+        id: version
+        shell: bash
+        run: |
+          latest_tag="$(git tag --list | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)"
+          current="${latest_tag#v}"
+          if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+            echo "Latest stable tag is not a vMAJOR.MINOR.PATCH tag: ${latest_tag}" >&2
+            exit 1
+          fi
+          version="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}.$((BASH_REMATCH[3] + 1)).dev${GITHUB_RUN_ID}"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          uv version "${version}" --no-sync
+      - run: uv run --group dev pytest
+      - run: uv build --wheel
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: preview-wheel
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 7
+      - name: Show installation command
+        env:
+          PREVIEW_VERSION: ${{ steps.version.outputs.version }}
+        run: echo "Install after publication with \`pip install 'graftql==${PREVIEW_VERSION}'\`" >> "${GITHUB_STEP_SUMMARY}"

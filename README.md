@@ -52,6 +52,14 @@ engines can be registered under different names for multi-tenant or federated se
 pip install graftql
 ```
 
+Pull requests from branches in this repository publish development releases for testing. These
+releases use versions such as `2.0.5.dev123456`, so pip ignores them during normal installation.
+Install a specific preview using the version shown in the pull request workflow summary:
+
+```bash
+pip install "graftql==2.0.5.dev123456"
+```
+
 ---
 
 ## Quick Start
@@ -117,7 +125,8 @@ authentication, async engines, and federation.
 2. Create a feature branch: `git checkout -b feat/my-change`.
 3. Make your changes and add tests.
 4. Run the checks: `uv run --group dev ruff check . && uv run --group dev pytest`.
-5. Open a pull request.
+5. Open a pull request whose title follows Conventional Commits, for example
+   `feat(api): add cursor filtering` or `fix: handle missing relationships`.
 
 All contributions are welcome — bug reports, documentation fixes, and new features alike.
 
