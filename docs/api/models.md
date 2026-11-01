@@ -1,0 +1,3 @@
+# Models
+
+::: graftql.core.model

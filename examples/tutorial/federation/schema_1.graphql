@@ -1,0 +1,82 @@
+schema @link(url: "https://specs.apollo.dev/federation/v2.7", import: ["@key"]) {
+  query: Query
+  mutation: Mutation
+}
+
+type CourseMutations {
+  put(input: PutCourseInput!): CourseSchema!
+  delete(input: DeleteCourseInputPk!): CourseSchema
+  create(input: CreateCourse!): CourseSchema!
+}
+
+type CourseQuery {
+  one(filter: Void): CourseSchema
+  many(first: Int = null, after: String = null, last: Int = null, before: String = null, filter: Void = null, orderBy: String = null): CourseSchemaCountableConnection!
+}
+
+type CourseSchema {
+  teacher: Profile!
+  id: Int
+  name: String!
+  teacherId: Int!
+}
+
+type CourseSchemaCountableConnection {
+  edges: [CourseSchemaEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type CourseSchemaEdge {
+  node: CourseSchema!
+  cursor: String!
+}
+
+input CreateCourse {
+  name: String!
+}
+
+input DeleteCourseInputPk {
+  id: Int = null
+}
+
+type Mutation {
+  """Mutations for courses"""
+  courses: CourseMutations!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Profile @key(fields: "id") {
+  id: ID!
+}
+
+input PutCourseInput {
+  id: Int = null
+  name: String = null
+  teacherId: Int = null
+}
+
+type Query {
+  _entities(representations: [_Any!]!): [_Entity]!
+  _service: _Service!
+
+  """Queries for courses"""
+  courses: CourseQuery!
+}
+
+"""Represents NULL values"""
+scalar Void
+
+scalar _Any
+
+union _Entity = Profile
+
+type _Service {
+  sdl: String!
+}

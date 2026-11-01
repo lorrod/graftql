@@ -1,0 +1,167 @@
+[project]
+name = "graftql"
+version = "2.0.4"
+description = "GraftQL turns your SQLModel definitions into a fully-typed GraphQL API — no schema duplication, no glue code."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "lorrod" }]
+keywords = ["graphql", "sqlmodel", "strawberry", "fastapi", "sqlalchemy", "orm", "api"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Topic :: Database",
+  "Topic :: Database :: Database Engines/Servers",
+  "Intended Audience :: Developers",
+  "Framework :: FastAPI",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "License :: OSI Approved :: MIT License",
+  "Typing :: Typed",
+  "Natural Language :: English",
+]
+dependencies = [
+  "sqlmodel==0.0.37",
+  "strawberry-graphql[debug-server]==0.307.1",
+  "fastapi==0.133.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/lorrod/graftql"
+Documentation = "https://lorrod.github.io/graftql/"
+Repository = "https://github.com/lorrod/graftql"
+Issues = "https://github.com/lorrod/graftql/issues"
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3.3",
+  "pytest-asyncio>=0.24.0",
+  "pytest-cov>=4.1.0",
+  "pytest-env>=1.1.1",
+  "httpx>=0.27.2",
+  "aiosqlite>=0.20.0",
+  "fastapi-cli>=0.0.5",
+  "isort>=5.12.0",
+  "taskipy>=1.12.0",
+]
+doc = [
+  "mkdocs>=1.6,<2",
+  "mkdocs-material>=9.4.7",
+  "mkdocs-macros-plugin>=1.0.5",
+  "jinja2>=3.1.2",
+  "mdx-include>=1.4.2",
+  "mkdocstrings>=0.26.1",
+  "mkdocstrings-python>=1.11.1",
+  "asyncpg>=0.29.0",
+  "greenlet>=3.0.3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+package = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["graftql"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "graftql/**",
+  "README.md",
+  "pyproject.toml",
+  "LICENSE",
+]
+
+[tool.pytest.ini_options]
+pythonpath = "."
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.isort]
+profile = "black"
+line_length = 79
+
+[tool.taskipy.tasks]
+ex_basic = "fastapi dev examples/tutorial/basic/main.py"
+ex_dl = "fastapi dev examples/tutorial/relationship/main.py"
+lint = "ruff check --fix . && ruff format ."
+docs = "mkdocs serve"
+test = "pytest -s -x --cov=graftql -vv -W ignore::DeprecationWarning"
+post_test = "coverage html"
+publish = "uv build && uv publish --token $PYPI_TOKEN"
+
+[tool.coverage.report]
+exclude_also = [
+  "if TYPE_CHECKING:",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.4",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.2",
+    "aiosqlite>=0.20.0",
+    "greenlet>=3.0.3",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+exclude = [".venv", "examples", "docs"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "W",
+    "F",
+    "I",
+    "B",
+    "UP",
+    "SIM",
+    "RUF",
+]
+ignore = [
+    "E501",
+    "B008",
+    "ARG001",
+    "ARG002",
+    "F403",
+    "E402",
+    "RUF012",
+    "B009",
+    "B023",
+    "B904",
+    "UP045",
+    "E721",
+    "E722",
+    "E701",
+    "E741",
+    "F405",
+    "F601",
+    "F821",
+    "SIM102",
+    "SIM103",
+    "SIM108",
+    "SIM113",
+    "SIM117",
+    "UP035",
+    "W191",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "E261",
+    "E302",
+    "E305",
+    "Q000",
+    "COM812",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"**/__pycache__/**" = ["ALL"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["graftql"]

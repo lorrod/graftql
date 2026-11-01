@@ -1,0 +1,52 @@
+query GetManyStudents {
+  students {
+    many(first: 1) {
+      edges {
+        node {
+          fullName
+        }
+      }
+    }
+  }
+}
+query GetManyCourses {
+  courses {
+    many(first: 1) {
+      edges {
+        node {
+          id
+          positiveFeedbacksCount
+          negativeFeedbacksCount
+        }
+      }
+    }
+  }
+}
+
+
+mutation FeedbackWrongCourse { # Put header "userId": 2
+  courses {
+    leaveFeedback(input: {
+      courseId: 1,
+      type: POSITIVE
+    }) {
+      id
+      positiveFeedbacksCount
+      negativeFeedbacksCount
+    }
+  }
+}
+
+
+mutation FeedbackCourse { # Put header "userId": 1
+  courses {
+    leaveFeedback(input: {
+      courseId: 1,
+      type: POSITIVE
+    }) {
+      id
+      positiveFeedbacksCount
+      negativeFeedbacksCount
+    }
+  }
+}

@@ -1,0 +1,63 @@
+input DeleteProfileInputPk {
+  dbId: Int = null
+}
+
+type Mutation {
+  """Mutations for profiles"""
+  profiles: ProfileMutations!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type ProfileMutations {
+  put(input: PutProfileInput!): ProfileSchema!
+  delete(input: DeleteProfileInputPk!): ProfileSchema
+}
+
+type ProfileQuery {
+  one(filter: Void): ProfileSchema
+  many(first: Int = null, after: String = null, last: Int = null, before: String = null, filter: Void = null, orderBy: String = null): ProfileSchemaCountableConnection!
+}
+
+type ProfileSchema {
+  id: ID!
+  dbId: Int!
+  name: String!
+}
+
+type ProfileSchemaCountableConnection {
+  edges: [ProfileSchemaEdge!]!
+  pageInfo: PageInfo!
+  totalCount: Int!
+}
+
+type ProfileSchemaEdge {
+  node: ProfileSchema!
+  cursor: String!
+}
+
+input PutProfileInput {
+  dbId: Int = null
+  name: String = null
+}
+
+type Query {
+  _service: _Service!
+
+  """Queries for profiles"""
+  profiles: ProfileQuery!
+}
+
+"""Represents NULL values"""
+scalar Void
+
+scalar _Any
+
+type _Service {
+  sdl: String!
+}
