@@ -22,7 +22,7 @@ jobs:
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: "3.12"
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
       - run: uv run --extra doc mkdocs build --strict
       - uses: actions/upload-pages-artifact@v3
         with:
