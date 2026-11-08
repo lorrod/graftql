@@ -21,7 +21,7 @@ classifiers = [
   "Natural Language :: English",
 ]
 dependencies = [
-  "sqlmodel==0.0.37",
+  "sqlmodel==0.0.48",
   "strawberry-graphql==0.338.0",
   "fastapi==0.162.0",
 ]
